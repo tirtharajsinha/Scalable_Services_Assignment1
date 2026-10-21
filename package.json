@@ -1,0 +1,22 @@
+{
+  "name": "seatflow",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/common",
+    "services/*"
+  ],
+  "scripts": {
+    "start": "node scripts/dev.mjs",
+    "test": "node --test services/*/tests/*.test.mjs packages/common/*.test.mjs",
+    "evidence": "node scripts/evidence.mjs",
+    "openapi": "node scripts/openapi.mjs"
+  },
+  "devDependencies": {
+    "embedded-postgres": "17.9.0-beta.16"
+  }
+}

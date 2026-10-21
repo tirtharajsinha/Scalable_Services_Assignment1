@@ -1,0 +1,13 @@
+{"timestamp":"2026-10-21T22:46:24.314Z","claim":"RUN resilience","data":{"command":"node scripts/evidence.mjs --scenario resilience","started":"2026-10-21T22:46:24.314Z"}}
+{"timestamp":"2026-10-21T22:46:24.314Z","claim":"COMMAND mock commits charge then delays first response past 300 ms timeout"}
+{"timestamp":"2026-10-21T22:46:24.977Z","claim":"SQL charge after timeout and safe retry","data":[{"id":"741bd917-989a-48ae-ade4-c3c02425248b","state":"CHARGED"}]}
+{"timestamp":"2026-10-21T22:46:24.979Z","claim":"COMMAND stop the real Payment service process"}
+{"timestamp":"2026-10-21T22:46:26.709Z","claim":"Graceful durable pending state after bounded retries","data":{"id":"886358e6-c601-47de-8492-003ef2597cd1","workshop_id":"stopped-payment-10eca529","customer":"Demo learner","state":"PAYMENT_PENDING","price_cents":25000,"payment_id":null,"correlation_id":"evidence-a361a0a8-1d47-4445-b200-1340db077ae9","last_error":"DEPENDENCY_UNAVAILABLE","next_attempt":"2026-10-21T22:46:26.492Z","created_at":"2026-10-21T22:46:25.005Z"}}
+{"timestamp":"2026-10-21T22:46:26.785Z","claim":"SQL seat stays reserved while payment outcome is unknown","data":[{"id":"stopped-payment-10eca529","available":0}]}
+{"timestamp":"2026-10-21T22:46:26.785Z","claim":"COMMAND restart Payment service"}
+{"timestamp":"2026-10-21T22:46:28.346Z","claim":"Recovered state without duplicate charge","data":{"booking":[{"id":"886358e6-c601-47de-8492-003ef2597cd1","state":"CONFIRMED","payment_id":"3115ed70-f6aa-42e6-a5e9-071dc5abcade"}],"payments":[{"id":"3115ed70-f6aa-42e6-a5e9-071dc5abcade","booking_id":"886358e6-c601-47de-8492-003ef2597cd1","state":"CHARGED","amount_cents":25000}],"reservation":[{"booking_id":"886358e6-c601-47de-8492-003ef2597cd1","workshop_id":"stopped-payment-10eca529","state":"CONFIRMED","price_cents":25000}],"notifications":[{"id":"0d4b7ae2-277a-47d3-bd8c-c0d78099d9c7","booking_id":"886358e6-c601-47de-8492-003ef2597cd1","message":"BOOKING_CONFIRMED"}]}}
+{"timestamp":"2026-10-21T22:46:28.347Z","claim":"COMMAND force a definitive mock payment decline"}
+{"timestamp":"2026-10-21T22:46:28.576Z","claim":"SQL declined booking releases its seat","data":[{"id":"decline-67b06738","available":1}]}
+{"timestamp":"2026-10-21T22:46:28.666Z","claim":"BR5 repeated release leaves exactly one available seat"}
+{"timestamp":"2026-10-21T22:46:28.670Z","claim":"PASS timeout exponential backoff jitter stopped dependency recovery and no duplicate charge"}
+{"timestamp":"2026-10-21T22:46:28.670Z","claim":"RESULT PASS resilience"}

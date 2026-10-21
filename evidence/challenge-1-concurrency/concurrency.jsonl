@@ -1,0 +1,8 @@
+{"timestamp":"2026-10-21T22:46:22.022Z","claim":"RUN concurrency","data":{"command":"node scripts/evidence.mjs --scenario concurrency","started":"2026-10-21T22:46:22.022Z"}}
+{"timestamp":"2026-10-21T22:46:22.022Z","claim":"COMMAND 25 parallel POST /api/v1/reservations capacity 5"}
+{"timestamp":"2026-10-21T22:46:22.373Z","claim":"Parallel outcome","data":{"parallelRequests":25,"capacity":5,"succeeded":5,"rejected":20,"error":{"error":{"code":"SOLD_OUT","message":"No seat is available","correlationId":"evidence-e66831bb-875c-408b-87a7-a39291829a10"}}}}
+{"timestamp":"2026-10-21T22:46:22.459Z","claim":"SQL inventory final state","data":[{"id":"concurrency-04f6f1be","capacity":5,"available":0,"allocations":5}]}
+{"timestamp":"2026-10-21T22:46:22.459Z","claim":"COMMAND additional 20 concurrent end to end bookings capacity 5"}
+{"timestamp":"2026-10-21T22:46:23.450Z","claim":"SQL end to end outcomes","data":[{"state":"CONFIRMED","count":5},{"state":"REJECTED","count":15}]}
+{"timestamp":"2026-10-21T22:46:23.450Z","claim":"PASS BR1 no over allocation in either concurrent experiment"}
+{"timestamp":"2026-10-21T22:46:23.450Z","claim":"RESULT PASS concurrency"}

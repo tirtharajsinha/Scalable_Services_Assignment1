@@ -1,0 +1,27 @@
+sequenceDiagram
+ participant C as Client
+ participant B as Booking
+ participant I as Inventory
+ participant P as Payment mock
+ participant N as Notification mock
+ C->>B: POST /api/v1/bookings and key
+ B-->>C: 202 accepted statusUrl
+ B->>I: HTTP reserve stable key
+ I-->>B: 201 reservation price
+ B->>P: HTTP charge stable key
+ alt payment known successful
+ P-->>B: 201 charged
+ B->>I: HTTP confirm
+ I-->>B: 200 confirmed
+ Note over B: local commit CONFIRMED and outbox
+ B->>N: HTTP deliver stable key
+ N-->>B: 201 mock delivery
+ else timeout or stopped
+ Note over B: keep PAYMENT_PENDING and reserved seat
+ B->>P: Retry same key with backoff and jitter
+ else definitive decline
+ P-->>B: 402 declined
+ B->>I: HTTP release
+ I-->>B: 200 released
+ Note over B: REJECTED
+ end

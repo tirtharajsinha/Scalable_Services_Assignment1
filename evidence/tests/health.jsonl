@@ -1,0 +1,8 @@
+{"timestamp":"2026-10-21T22:46:21.410Z","claim":"RUN health","data":{"command":"node scripts/evidence.mjs --scenario health","started":"2026-10-21T22:46:21.408Z"}}
+{"timestamp":"2026-10-21T22:46:21.411Z","claim":"COMMAND GET /health on four independently running services"}
+{"timestamp":"2026-10-21T22:46:21.415Z","claim":"booking","data":{"status":200,"body":{"service":"booking","status":"ok"},"replay":null}}
+{"timestamp":"2026-10-21T22:46:21.418Z","claim":"inventory","data":{"status":200,"body":{"service":"inventory","status":"ok"},"replay":null}}
+{"timestamp":"2026-10-21T22:46:21.420Z","claim":"payment","data":{"status":200,"body":{"service":"payment","status":"ok"},"replay":null}}
+{"timestamp":"2026-10-21T22:46:21.422Z","claim":"notification","data":{"status":200,"body":{"service":"notification","status":"ok"},"replay":null}}
+{"timestamp":"2026-10-21T22:46:21.422Z","claim":"PASS all four own databases are reachable"}
+{"timestamp":"2026-10-21T22:46:21.422Z","claim":"RESULT PASS health"}

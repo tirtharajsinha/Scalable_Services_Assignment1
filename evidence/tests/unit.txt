@@ -1,0 +1,35 @@
+
+> seatflow@1.0.0 test
+> node --test services/*/tests/*.test.mjs packages/common/*.test.mjs
+
+{"timestamp":"2026-10-21T22:46:17.603Z","correlationId":"background","event":"downstream_retry","attempt":1,"delayMs":120,"url":"http://example.test"}
+{"timestamp":"2026-10-21T22:46:17.606Z","correlationId":"background","event":"downstream_retry","attempt":2,"delayMs":200,"url":"http://example.test"}
+{"timestamp":"2026-10-21T22:46:17.608Z","correlationId":"background","event":"downstream_retry","attempt":1,"delayMs":119,"url":"http://example.test"}
+{"timestamp":"2026-10-21T22:46:17.608Z","correlationId":"background","event":"downstream_retry","attempt":2,"delayMs":195,"url":"http://example.test"}
+✔ BR2 fingerprint ignores key order but detects changed payload (1.2394ms)
+✔ Retry backoff increases and includes bounded jitter (4.3946ms)
+✔ Business rejection is not retried (0.2323ms)
+✔ Exhausted retries produce a bounded dependency error (1.0142ms)
+✔ BR4 confirmation needs a known successful payment (1.4049ms)
+✔ Final booking state cannot go backwards (0.2539ms)
+✔ Booking does not accept a customer supplied price (1.7648ms)
+✔ BR1 capacity rejects a failed atomic update (0.9911ms)
+✔ BR5 repeated release is harmless and paid inventory cannot release (0.154ms)
+✔ Inventory rejects fractional capacity and untrusted fields (1.343ms)
+✔ BR6 retries derive a stable notification key (0.9925ms)
+✔ Only the booking confirmation message is accepted (1.9782ms)
+✔ BR3 amounts must be positive integer minor currency units (4.7096ms)
+✔ Mock decline has no successful charge state (0.3183ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 938.0689
+npm notice
+npm notice New minor version of npm available! 11.8.0 -> 11.21.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.21.1
+npm notice To update run: npm install -g npm@11.21.1
+npm notice

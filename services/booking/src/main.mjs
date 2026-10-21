@@ -1,0 +1,11 @@
+import { pool, appFor, listen } from "@seatflow/common";
+import { schema } from "./repository.mjs";
+import { routes } from "./api.mjs";
+import { startWorker } from "./worker.mjs";
+import spec from "../../../docs/openapi/booking.json" with { type: "json" };
+const db = pool();
+await db.query(schema);
+const app = appFor("booking", db, spec);
+routes(app, db);
+const stop = startWorker(db);
+listen(app, db, stop);

@@ -1,0 +1,6 @@
+{"timestamp":"2026-10-21T22:46:34.745Z","claim":"RUN contracts","data":{"command":"node scripts/evidence.mjs --scenario contracts","started":"2026-10-21T22:46:34.745Z"}}
+{"timestamp":"2026-10-21T22:46:34.746Z","claim":"COMMAND validate service contracts and malformed requests"}
+{"timestamp":"2026-10-21T22:46:34.776Z","claim":"Consistent validation errors","data":{"invalid":{"status":422,"body":{"error":{"code":"VALIDATION_ERROR","message":"Request fields or JSON are invalid","correlationId":"evidence-1532a3ad-2b06-4de8-85d2-730ec891fee4"}},"replay":null},"missing":{"status":400,"body":{"error":{"code":"INVALID_IDEMPOTENCY_KEY","message":"Supply a 1 to 128 character Idempotency-Key","correlationId":"evidence-a8cee89b-bad5-4002-9845-0400986a08c9"}},"replay":null}}}
+{"timestamp":"2026-10-21T22:46:35.116Z","claim":"Separate credentials cannot connect to another service database","data":[{"service":"booking","otherDatabase":"inventory","sqlstate":"42501"},{"service":"inventory","otherDatabase":"payment","sqlstate":"42501"},{"service":"payment","otherDatabase":"notification","sqlstate":"42501"},{"service":"notification","otherDatabase":"booking","sqlstate":"42501"}]}
+{"timestamp":"2026-10-21T22:46:35.116Z","claim":"PASS contracts validation and credential isolation"}
+{"timestamp":"2026-10-21T22:46:35.116Z","claim":"RESULT PASS contracts"}
