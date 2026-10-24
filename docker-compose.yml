@@ -1,0 +1,157 @@
+services:
+  postgres:
+    build:
+      context: ./docker/postgres
+    container_name: seatflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  inventory:
+    build:
+      context: .
+      dockerfile: services/inventory/Dockerfile
+    container_name: seatflow-inventory
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8082"
+      DATABASE_URL: postgresql://sf_inventory:inventorypw@postgres:5432/sf_inventory
+      DB_POOL_SIZE: "12"
+      INVENTORY_URL: http://inventory:8082
+      PAYMENT_URL: http://payment:8083
+      NOTIFICATION_URL: http://notification:8084
+      HTTP_TIMEOUT_MS: "300"
+      RETRY_ATTEMPTS: "3"
+      RETRY_BASE_MS: "80"
+      WORKER_INTERVAL_MS: "100"
+      ENABLE_SIMULATION: "true"
+      MOCK_DELAY_MS: "1200"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8082/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+  payment:
+    build:
+      context: .
+      dockerfile: services/payment/Dockerfile
+    container_name: seatflow-payment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8083"
+      DATABASE_URL: postgresql://sf_payment:paymentpw@postgres:5432/sf_payment
+      DB_POOL_SIZE: "12"
+      INVENTORY_URL: http://inventory:8082
+      PAYMENT_URL: http://payment:8083
+      NOTIFICATION_URL: http://notification:8084
+      HTTP_TIMEOUT_MS: "300"
+      RETRY_ATTEMPTS: "3"
+      RETRY_BASE_MS: "80"
+      WORKER_INTERVAL_MS: "100"
+      ENABLE_SIMULATION: "true"
+      MOCK_DELAY_MS: "1200"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8083/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+  notification:
+    build:
+      context: .
+      dockerfile: services/notification/Dockerfile
+    container_name: seatflow-notification
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8084"
+      DATABASE_URL: postgresql://sf_notification:notificationpw@postgres:5432/sf_notification
+      DB_POOL_SIZE: "12"
+      INVENTORY_URL: http://inventory:8082
+      PAYMENT_URL: http://payment:8083
+      NOTIFICATION_URL: http://notification:8084
+      HTTP_TIMEOUT_MS: "300"
+      RETRY_ATTEMPTS: "3"
+      RETRY_BASE_MS: "80"
+      WORKER_INTERVAL_MS: "100"
+      ENABLE_SIMULATION: "true"
+      MOCK_DELAY_MS: "1200"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8084/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+  booking:
+    build:
+      context: .
+      dockerfile: services/booking/Dockerfile
+    container_name: seatflow-booking
+    depends_on:
+      postgres:
+        condition: service_healthy
+      inventory:
+        condition: service_healthy
+      payment:
+        condition: service_healthy
+      notification:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8081"
+      DATABASE_URL: postgresql://sf_booking:bookingpw@postgres:5432/sf_booking
+      DB_POOL_SIZE: "12"
+      INVENTORY_URL: http://inventory:8082
+      PAYMENT_URL: http://payment:8083
+      NOTIFICATION_URL: http://notification:8084
+      HTTP_TIMEOUT_MS: "300"
+      RETRY_ATTEMPTS: "3"
+      RETRY_BASE_MS: "80"
+      WORKER_INTERVAL_MS: "100"
+      ENABLE_SIMULATION: "true"
+      MOCK_DELAY_MS: "1200"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:8081/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

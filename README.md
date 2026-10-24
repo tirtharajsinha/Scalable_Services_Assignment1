@@ -13,11 +13,11 @@ npm start
 
 The local launcher starts an actual native PostgreSQL server on 127.0.0.1:15432 and four independent Node processes. It creates sf_booking, sf_inventory, sf_payment and sf_notification databases with different randomly generated passwords, revokes PUBLIC access and grants each role access only to its own database. Generated credentials are under .runtime/dev and must stay private. This is a development launcher, not a shared application database.
 
-| Service | Port | Health | Contract |
-|---|---:|---|---|
-| Booking | 8081 | /health | /openapi.json |
-| Inventory | 8082 | /health | /openapi.json |
-| Payment | 8083 | /health | /openapi.json |
+| Service      | Port | Health  | Contract      |
+| ------------ | ---: | ------- | ------------- |
+| Booking      | 8081 | /health | /openapi.json |
+| Inventory    | 8082 | /health | /openapi.json |
+| Payment      | 8083 | /health | /openapi.json |
 | Notification | 8084 | /health | /openapi.json |
 
 Leave the launcher running in one terminal. In a second terminal, use scripts/client.mjs to create an example workshop and booking against the dev ports:
@@ -42,6 +42,12 @@ First stop that inventory process through your process manager, or select an unu
 
 Configuration: PORT, HOST, DATABASE_URL, DB_POOL_SIZE, INVENTORY_URL, PAYMENT_URL, NOTIFICATION_URL, HTTP_TIMEOUT_MS, RETRY_ATTEMPTS, RETRY_BASE_MS, WORKER_INTERVAL_MS, ENABLE_SIMULATION, MOCK_DELAY_MS. URL values are needed only by Booking; simulation values only by Payment. PORT and DATABASE_URL are required for independently launched services. Set HOST=0.0.0.0 for containers. Launchers have documented local defaults; service configuration is supplied through environment variables.
 
+## Start the stack
+
+```bash
+docker compose up --build -d
+```
+
 ## Tests and repeatable evidence
 
 ```text
@@ -65,22 +71,29 @@ See evidence/README.md and the per-challenge README files. Raw JSONL logs and ti
 Create a workshop in Inventory, then submit Booking with Idempotency-Key and a JSON body containing workshopId and customer. POST returns HTTP 202 and a statusUrl. Repeating the same key returns the same accepted resource and original 202 body, even after it completes. Poll GET /api/v1/bookings/{id} for its current state. A changed payload under an existing key returns 409. The caller cannot set price; Booking obtains the price from the reservation.
 
 Errors have the common shape:
+
 ```json
-{"error":{"code":"SOLD_OUT","message":"No seat is available","correlationId":"request-id"}}
+{
+  "error": {
+    "code": "SOLD_OUT",
+    "message": "No seat is available",
+    "correlationId": "request-id"
+  }
+}
 ```
 
 Endpoints are versioned under /api/v1; /health and /openapi.json are operational paths. JSON schema validation rejects unknown properties. Internal operations have stable keys reserve:<bookingId>, charge:<bookingId> and notice:<bookingId>. Confirm and release are semantically idempotent state transitions. Correlation IDs propagate through HTTP and are persisted for background processing.
 
 ## Business rules and traceability
 
-| Rule | Enforcement | Unit test | Integration evidence |
-|---|---|---|---|
-| BR1 Seats never exceed capacity | inventory repository reserve; conditional UPDATE and CHECK | inventory domain test | concurrency |
-| BR2 Same key same semantic payload has one effect; changed payload conflicts | common idempotent; unique key + fingerprint + cached response | common fingerprint test | idempotency and direct payment race |
-| BR3 Price uses positive integer cents and Booking gets it from Inventory | payment chargeInput; bookingInput excludes price | payment amount test; booking input test | main and contracts |
-| BR4 Confirm only after a known successful payment | booking assertPaid and allowed transitions | booking payment test | resilience and main |
-| BR5 Release at most once; never release confirmed inventory | inventory transition with row lock | inventory transition test | declined repeated release and paid release conflict |
-| BR6 One logical confirmation message per booking | unique notifications.booking_id; stable key; booking outbox | notification stable key test | idempotency and recovery |
+| Rule                                                                         | Enforcement                                                   | Unit test                               | Integration evidence                                |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------- |
+| BR1 Seats never exceed capacity                                              | inventory repository reserve; conditional UPDATE and CHECK    | inventory domain test                   | concurrency                                         |
+| BR2 Same key same semantic payload has one effect; changed payload conflicts | common idempotent; unique key + fingerprint + cached response | common fingerprint test                 | idempotency and direct payment race                 |
+| BR3 Price uses positive integer cents and Booking gets it from Inventory     | payment chargeInput; bookingInput excludes price              | payment amount test; booking input test | main and contracts                                  |
+| BR4 Confirm only after a known successful payment                            | booking assertPaid and allowed transitions                    | booking payment test                    | resilience and main                                 |
+| BR5 Release at most once; never release confirmed inventory                  | inventory transition with row lock                            | inventory transition test               | declined repeated release and paid release conflict |
+| BR6 One logical confirmation message per booking                             | unique notifications.booking_id; stable key; booking outbox   | notification stable key test            | idempotency and recovery                            |
 
 ## Design choices and limits
 
