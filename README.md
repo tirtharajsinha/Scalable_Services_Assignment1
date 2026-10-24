@@ -42,11 +42,33 @@ First stop that inventory process through your process manager, or select an unu
 
 Configuration: PORT, HOST, DATABASE_URL, DB_POOL_SIZE, INVENTORY_URL, PAYMENT_URL, NOTIFICATION_URL, HTTP_TIMEOUT_MS, RETRY_ATTEMPTS, RETRY_BASE_MS, WORKER_INTERVAL_MS, ENABLE_SIMULATION, MOCK_DELAY_MS. URL values are needed only by Booking; simulation values only by Payment. PORT and DATABASE_URL are required for independently launched services. Set HOST=0.0.0.0 for containers. Launchers have documented local defaults; service configuration is supplied through environment variables.
 
-## Start the stack
+## Start the compose
 
 ```bash
 docker compose up --build -d
 ```
+
+## Docker and Swarm
+
+For the local Compose workflow, see the stack command above. For the demo Swarm setup used in this repo, run the full local reset and deploy sequence documented in [DOCKER.md](DOCKER.md):
+
+```bash
+docker swarm init
+docker stack rm seatflow || true
+docker volume rm seatflow_postgres_data
+
+docker build -t seatflow-postgres:local ./docker/postgres
+docker build -t seatflow-booking:local -f services/booking/Dockerfile .
+docker build -t seatflow-inventory:local -f services/inventory/Dockerfile .
+docker build -t seatflow-payment:local -f services/payment/Dockerfile .
+docker build -t seatflow-notification:local -f services/notification/Dockerfile .
+
+docker stack deploy -c docker-stack.yml seatflow
+docker service ls
+docker stack ps seatflow
+```
+
+If the app fails with PostgreSQL role errors, remove the stale Postgres volume first and redeploy; the same reset steps are described in [DOCKER.md](DOCKER.md).
 
 ## Tests and repeatable evidence
 
