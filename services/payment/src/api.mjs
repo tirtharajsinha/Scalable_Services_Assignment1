@@ -36,5 +36,13 @@ export function routes(app, db) {
     await db.query("UPDATE simulation SET mode=$1 WHERE id=1", [b.mode]);
     res.json(b);
   });
+  app.get("/api/v1/simulation", async (req, res) => {
+    if (process.env.ENABLE_SIMULATION !== "true")
+      throw new Fault(404, "NOT_FOUND", "Simulation is disabled");
+    const {
+      rows: [row],
+    } = await db.query("SELECT mode FROM simulation WHERE id=1");
+    res.json({ mode: row?.mode ?? "normal" });
+  });
   finish(app);
 }

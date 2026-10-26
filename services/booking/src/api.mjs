@@ -10,6 +10,11 @@ export function routes(app, db) {
     res.set("Location", result.body.statusUrl);
     send(res, result);
   });
+  // must be registered BEFORE "/:id"
+  app.get("/api/v1/bookings/all", async (req, res) => {
+    const { rows } = await db.query("SELECT * FROM bookings ORDER BY created_at DESC");
+    res.json(rows);
+  });
   app.get("/api/v1/bookings/:id", async (req, res) => {
     const id = z.uuid().parse(req.params.id);
     const {

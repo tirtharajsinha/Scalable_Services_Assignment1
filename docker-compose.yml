@@ -49,7 +49,9 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
-    restart: unless-stopped
+    restart: always
+    labels:
+      - "autoheal=true"
 
   payment:
     build:
@@ -81,7 +83,9 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
-    restart: unless-stopped
+    restart: always
+    labels:
+      - "autoheal=true"
 
   notification:
     build:
@@ -113,7 +117,9 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
-    restart: unless-stopped
+    restart: always
+    labels:
+      - "autoheal=true"
 
   booking:
     build:
@@ -125,10 +131,7 @@ services:
         condition: service_healthy
       inventory:
         condition: service_healthy
-      payment:
-        condition: service_healthy
-      notification:
-        condition: service_healthy
+      
     ports:
       - "8081:8081"
     environment:
@@ -142,7 +145,7 @@ services:
       HTTP_TIMEOUT_MS: "300"
       RETRY_ATTEMPTS: "3"
       RETRY_BASE_MS: "80"
-      WORKER_INTERVAL_MS: "100"
+      WORKER_INTERVAL_MS: "10000"
       ENABLE_SIMULATION: "true"
       MOCK_DELAY_MS: "1200"
     healthcheck:
@@ -151,7 +154,32 @@ services:
       timeout: 5s
       retries: 10
       start_period: 15s
-    restart: unless-stopped
+    restart: always
+    labels:
+      - "autoheal=true"
+
+  ui:
+    build:
+      context: ./services/seatflow-ui
+    container_name: seatflow-ui
+    depends_on:
+      booking:
+        condition: service_healthy
+      inventory:
+        condition: service_healthy
+  
+    ports:
+      - "5173:5173"
+    environment:
+      HOST: 0.0.0.0
+      PORT: "5173"
+      VITE_BOOKING_URL: http://booking:8081
+      VITE_INVENTORY_URL: http://inventory:8082
+      VITE_PAYMENT_URL: http://payment:8083
+      VITE_NOTIFICATION_URL: http://notification:8084
+    restart: always
+    labels:
+      - "autoheal=true"
 
 volumes:
   postgres_data:
