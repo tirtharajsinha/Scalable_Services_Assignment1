@@ -70,8 +70,25 @@ async function processBooking(db, id) {
             log("booking_state", { bookingId: id, state: b.state });
           }
         } catch (err) {
+          const unreachable = [
+            "ECONNREFUSED",
+            "ECONNRESET",
+            "ENOTFOUND",
+            "EHOSTUNREACH",
+            "ETIMEDOUT",
+            "EAI_AGAIN",
+          ].includes(err.code);
+
+          if (unreachable) {
+            log("notification_url_unreachable", {
+              bookingId: item.booking_id,
+              url: notification + "/api/v1/notifications",
+              code: err.code,
+              reason: err.message,
+            });
+          }
           await db.query(
-            "UPDATE bookings SET last_error=$2,next_attempt=now()+interval '1 second' WHERE id=$1",
+            "UPDATE bookings SET last_error=$2,next_attempt=now()+interval '10 second' WHERE id=$1",
             [id, err.code ?? err.message],
           );
           log("booking_waiting", {
@@ -91,12 +108,15 @@ async function processBooking(db, id) {
 }
 async function deliverOutbox(db) {
   const { rows } = await db.query(
-    "SELECT o.*,b.correlation_id FROM outbox o JOIN bookings b ON b.id=o.booking_id WHERE NOT delivered LIMIT 4",
+    "SELECT o.*, b.correlation_id FROM outbox o JOIN bookings b ON b.id=o.booking_id WHERE NOT delivered LIMIT 4",
   );
+
   for (const item of rows)
     await context.run({ id: item.correlation_id }, async () => {
       try {
-        const r = await remote(notification + "/api/v1/notifications", {
+        const url = notification + "/api/v1/notifications";
+
+        const r = await remote(url, {
           method: "POST",
           key: "notice:" + item.booking_id,
           body: {
@@ -105,12 +125,35 @@ async function deliverOutbox(db) {
             message: "BOOKING_CONFIRMED",
           },
         });
-        if (r.status !== 201) throw new Error("Notification rejected");
+
+        if (r.status !== 201) {
+          throw new Error("Notification rejected: HTTP " + r.status);
+        }
+
         await db.query("UPDATE outbox SET delivered=true WHERE booking_id=$1", [
           item.booking_id,
         ]);
+
         log("notification_delivered", { bookingId: item.booking_id });
       } catch (err) {
+        const unreachable = [
+          "ECONNREFUSED",
+          "ECONNRESET",
+          "ENOTFOUND",
+          "EHOSTUNREACH",
+          "ETIMEDOUT",
+          "EAI_AGAIN",
+        ].includes(err.code);
+
+        if (unreachable) {
+          log("notification_url_unreachable", {
+            bookingId: item.booking_id,
+            url: notification + "/api/v1/notifications",
+            code: err.code,
+            reason: err.message,
+          });
+        }
+
         log("notification_waiting", {
           bookingId: item.booking_id,
           reason: err.code ?? err.message,
@@ -137,7 +180,7 @@ export function startWorker(db) {
         busy = false;
       }
     },
-    Number(process.env.WORKER_INTERVAL_MS ?? 150),
+    Number(process.env.WORKER_INTERVAL_MS ?? 10000),
   );
   return () => {
     stopped = true;
