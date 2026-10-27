@@ -5,3 +5,6 @@ node_modules/
 *.log
 __pycache__/
 docs/qa/
+*.pem
+*.pub
+seatflow-new
